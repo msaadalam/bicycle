@@ -24,5 +24,32 @@ class ContactusController extends Controller
         return view('admin.showcontactus')->with('data', $data);
         
     }
+    
+    
+    $files = $request->file('file');
+
+
+        if (!empty($files)) {
+            $ext = $files->getClientOriginalExtension();
+            if ($ext === 'pdf' || $ext === 'doc' || $ext === 'docx') {
+                $filename = 'resume' . $id . '.' . $files->getClientOriginalExtension();
+                $image_full_name = $filename;
+                $upload_path = 'public/attachment/app_resume/';
+                $image_url = $upload_path . $image_full_name;
+                $files->move($upload_path, $image_full_name);
+                Application::where('id', $id)->first()->update([
+                    'resume_url' => $image_url,
+                ]);
+                $applicant = Application::where('id', $id)->firstOrFail();
+                $applicant->resume_url = $image_url;
+                $applicant->save();
+                $applicant->update($request->all());
+
+                (new Log())->createLog(
+                    $applicant->id,
+                    session('staff_id'),
+                    'Applicant details updated'
+                );
+        
 
 }
